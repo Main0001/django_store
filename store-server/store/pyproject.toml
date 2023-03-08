@@ -1,2 +1,2 @@
 [tool.pyright]
-include = ["store", "products"]
+include = ["store", "products", "users"]
