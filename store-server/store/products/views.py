@@ -2,6 +2,7 @@ from django.shortcuts import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
+from django.views.generic.edit import CreateView
 
 from products.models import Product, ProductCategory, Basket
 # Create your views here.
