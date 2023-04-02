@@ -5,15 +5,12 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView
 
 from products.models import Product, ProductCategory, Basket
+from common.views import TitleMixin
 # Create your views here.
 
-class IndexView(TemplateView):
+class IndexView(TitleMixin, TemplateView):
     template_name = 'products/index.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['title'] = 'Store'
-        return context
+    title = 'Store'
 
 
 #def index(request):
@@ -21,14 +18,14 @@ class IndexView(TemplateView):
 #    return render(request, 'products/index.html', context=context)
 
 
-class ProductsListView(ListView):
+class ProductsListView(TitleMixin, ListView):
     model = Product
     paginate_by = 3
     template_name = 'products/products.html'
+    title = 'Store - Каталог'
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=object_list, **kwargs)
-        context['title'] = 'Store - Каталог'
         context['categories'] = ProductCategory.objects.all()
         return context
     
