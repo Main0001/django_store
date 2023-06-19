@@ -8,6 +8,7 @@ from products.models import Product, ProductCategory, Basket
 from common.views import TitleMixin
 # Create your views here.
 
+
 class IndexView(TitleMixin, TemplateView):
     template_name = 'products/index.html'
     title = 'Store'
