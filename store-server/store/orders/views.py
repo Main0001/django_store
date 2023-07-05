@@ -1,9 +1,16 @@
+from typing import Any, Dict
+from django.db.models.query import QuerySet
 from django.views.generic.edit import CreateView
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse_lazy, reverse
 from django.conf import settings
 from django.views.generic.base import TemplateView
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
 from django.views.decorators.csrf import csrf_exempt
+
+from products.models import Basket
+from orders.models import Order
 
 from orders.forms import OrderForm
 
@@ -27,6 +34,27 @@ class CanceledTemplateView(TitleMixin, TemplateView):
     title = 'Store - Отмена заказа!'
 
 
+class OrderListView(TitleMixin, ListView):
+    template_name = 'orders/orders.html'
+    title = 'Store - Заказы'
+    queryset = Order.objects.all()
+    ordering = ('id',)
+
+    def get_queryset(self):
+      queryset = super(OrderListView, self).get_queryset()
+      return queryset.filter(initiator=self.request.user)
+
+
+class OrderDetailView(DetailView):
+    template_name = 'orders/order.html'
+    model = Order
+
+    def get_context_data(self, **kwargs):
+       context = super(OrderDetailView, self).get_context_data(**kwargs)
+       context['title'] = f'Store - Заказ #{self.object.id}'
+       return context
+
+
 # Create your views here.
 class OrderCreateView(TitleMixin, CreateView):
     template_name = 'orders/order-create.html'
@@ -36,14 +64,10 @@ class OrderCreateView(TitleMixin, CreateView):
 
     def post(self, request, *args, **kwargs):
         super(OrderCreateView, self).post(request, *args, **kwargs)
+        baskets = Basket.objects.filter(user=self.request.user)
+
         checkout_session = stripe.checkout.Session.create(
-            line_items=[
-                {
-                    # Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-                    'price': 'price_1NQBy9IUeRDlxFCjJWwawP1A',
-                    'quantity': 1,
-                },
-            ],
+            line_items=baskets.stripe_products(),
             metadata={'order_id': str(self.object.id)},
             mode='payment',
             success_url='{}{}'.format(settings.DOMAIN_NAME, reverse('orders:order_success')),
@@ -87,5 +111,6 @@ def stripe_webhook_view(request):
   return HttpResponse(status=200)
 
 def fulfill_order(session):
-  print(session.metadata.order_id)
-  print("Fulfilling order")
+  order_id = session.metadata.order_id
+  order = Order.objects.get(id=order_id)
+  order.update_after_payment()
