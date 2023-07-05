@@ -24,6 +24,7 @@ class ProductsListView(TitleMixin, ListView):
     paginate_by = 3
     template_name = 'products/products.html'
     title = 'Store - Каталог'
+    ordering = ('id',)
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=object_list, **kwargs)
